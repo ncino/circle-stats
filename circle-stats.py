@@ -8,6 +8,11 @@ import re
 import requests
 import xmltodict
 
+import datetime
+import pytz
+from pytz import timezone
+import dateutil.parser
+
 class AnalyzeBuilds(object):
 
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARN"))
@@ -30,7 +35,7 @@ class AnalyzeBuilds(object):
         recent_builds = []
         build_stats = []
 
-        for offset_counter in range(0, 50):
+        for offset_counter in range(0, 100):
 
             get_url = AnalyzeBuilds.get_recent_builds_URL.format(
                 github_user=self.GITHUB_USER,
@@ -44,14 +49,28 @@ class AnalyzeBuilds(object):
                 return Exception("Error retrieving recent builds for project: %s" % r.text)
 
             recent_builds = json.loads(r.text)
-
-            for build in recent_builds:
-                build_stats.append({"start_time": build["start_time"], "status": build["status"], "build_time": build["build_time_millis"]})        
-        
+ 
+            self._process_build_data(recent_builds, build_stats)
 
         self.write_csv_file("build.csv", build_stats)
 
         return recent_builds
+
+    def _process_build_data(self, builds, processed_builds):
+
+        for build in builds:
+            if "workflows" in build:
+                job_name = build["workflows"]["job_name"]
+                if not job_name.startswith("build-and-test"):
+                    continue
+            else:
+                continue
+
+            build_datetime_utc = dateutil.parser.parse(build["start_time"])
+            eastern = timezone('US/Eastern')
+            build_time_string =  build_datetime_utc.astimezone(eastern).strftime('%Y-%m-%d %H:%M:%S')
+
+            processed_builds.append({"start_time": build_time_string, "status": build["status"], "build_time": build["build_time_millis"], "job_name":job_name})        
 
     @staticmethod
     def write_csv_file(csv_output_filename, csv_data):
@@ -59,7 +78,7 @@ class AnalyzeBuilds(object):
         with open(csv_output_filename, 'w') as csvfile:
             csv_writer = csv.DictWriter(
                 csvfile,
-                fieldnames=["start_time", "status", "build_time"],
+                fieldnames=["job_name","start_time", "status", "build_time"],
                 delimiter=",", quotechar='"', quoting=csv.QUOTE_NONE)
             csv_writer.writeheader()
             for row in csv_data:
