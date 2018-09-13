@@ -125,7 +125,7 @@ class AnalyzeBuilds(object):
             csv_writer = csv.DictWriter(
                 csvfile,
                 fieldnames=["job_name","start_time", "status", "build_time", "failure_step"],
-                delimiter=",", quotechar='"', quoting=csv.QUOTE_NONE)
+                delimiter=",", quotechar='"', escapechar='\\', quoting=csv.QUOTE_NONE)
             csv_writer.writeheader()
             for row in csv_data:
                 csv_writer.writerow(row)
