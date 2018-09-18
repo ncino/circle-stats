@@ -30,6 +30,8 @@ class AnalyzeBuilds(object):
         self.median_time_by_class = {}
         self.REPO = sys.argv[1]
         self.branch = ""
+        self.filter = "completed"
+        self.allowed_test_statuses = ["success", "failure"]
         self.processed_builds = []
         self.test_results = []
 
@@ -42,9 +44,13 @@ class AnalyzeBuilds(object):
             self.branch = "/tree/" + sys.argv[3]
 
         if len(sys.argv) > 4:
-            self.filter = sys.argv[4]
-        else:
-            self.filter = 'completed'
+            self.mode = sys.argv[4]
+            if self.mode == "build_failures":
+                self.filter = "failed"
+            elif self.mode == "test_failures":
+                self.allowed_test_statuses = ["failure"]
+            else:
+                raise Exception(self.mode + " is not an understood argument")
 
     def _get_recent_builds_for_project(self):
         """
@@ -131,8 +137,8 @@ class AnalyzeBuilds(object):
         test_data = self._make_json_request(test_url)
 
         for test in test_data["tests"]:
-            # Temporary check for failures only
-            if test["result"] == "failure":
+
+            if test["result"] in self.allowed_test_statuses :
                 self.test_results.append({
                     "build": build["build_num"],
                     "test_class": test["classname"],
