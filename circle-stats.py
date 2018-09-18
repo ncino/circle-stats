@@ -21,7 +21,7 @@ class AnalyzeBuilds(object):
     GITHUB_ORG = os.environ.get('GITHUB_ORG')
     CI_TOKEN = os.environ.get('CI_TOKEN')
     CI_API_URL_PREFIX = "https://circleci.com/api/v1.1/project/github"
-    get_recent_builds_URL = CI_API_URL_PREFIX + "/{github_org}/{repo}/tree/release?circle-token={ci_token}&limit=100&offset={offset_counter}&filter={filter}"
+    get_recent_builds_URL = CI_API_URL_PREFIX + "/{github_org}/{repo}{branch}?circle-token={ci_token}&limit=100&offset={offset_counter}&filter={filter}"
     get_build_details_URL = CI_API_URL_PREFIX + "/{github_org}/{repo}/{build_num}?circle-token={ci_token}"
     get_test_data_URL = CI_API_URL_PREFIX + "/{github_org}/{repo}/{build_num}/tests?circle-token={ci_token}"
 
@@ -29,6 +29,7 @@ class AnalyzeBuilds(object):
         self.test_times_by_class = {}
         self.median_time_by_class = {}
         self.REPO = sys.argv[1]
+        self.branch = ""
         self.processed_builds = []
         self.test_results = []
 
@@ -38,7 +39,10 @@ class AnalyzeBuilds(object):
             self.build_iterations = 1
 
         if len(sys.argv) > 3:
-            self.filter = sys.argv[3]
+            self.branch = "/tree/" + sys.argv[3]
+
+        if len(sys.argv) > 4:
+            self.filter = sys.argv[4]
         else:
             self.filter = 'completed'
 
@@ -51,14 +55,15 @@ class AnalyzeBuilds(object):
 
         for offset_counter in range(0, self.build_iterations):
 
-            print "Getting build " + offset_counter*100 + " of " + self.build_iterations
+            print "Getting build " + str(offset_counter*100+1) + " of " + str(self.build_iterations*100)
 
             recents_url = AnalyzeBuilds.get_recent_builds_URL.format(
-                github_org=self.GITHUB_ORG,
-                repo=self.REPO,
-                ci_token=self.CI_TOKEN,
-                offset_counter=offset_counter*100,
-                filter=self.filter
+                github_org = self.GITHUB_ORG,
+                repo = self.REPO,
+                branch = self.branch,
+                ci_token = self.CI_TOKEN,
+                offset_counter = offset_counter*100,
+                filter = self.filter
             )
 
             recent_builds = self._make_json_request(recents_url)
