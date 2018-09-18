@@ -11,7 +11,7 @@ Used to obtain Circle CI stats for running long term build performance analysis.
 repo = github repository name
 number_of_builds = number of builds to analyze (increments of 100)
 branch (optional) = the branch that you want to query (default: all branches)
-special mode (optional) = special filter to apply to the query. Options are "build_failures" and "test_failures". "build_failures" will only include failed builds in the results. "test_failures" will only include failed tests in the results.
+filter (optional) = special filter to apply to the query. Options are "build_failures" and "test_failures". "build_failures" will only include failed builds in the results. "test_failures" will only include failed tests in the results.
 ```
 The following environment variables must also be present to run this script
 ```
