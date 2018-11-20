@@ -76,7 +76,7 @@ class AnalyzeBuilds(object):
  
             self._process_build_data(recent_builds)
 
-        self.write_csv_file("build.csv", self.processed_builds, ["job_name","start_time", "status", "build_time", "failure_step"])
+        self.write_csv_file("build.csv", self.processed_builds, ["start_time", "status", "build_time", "failure_step"])
         self.write_csv_file("tests.csv", self.test_results,["build", "test_class", "test_name","full_name", "result", "run_time", "message"])
 
         return recent_builds
@@ -84,12 +84,6 @@ class AnalyzeBuilds(object):
     def _process_build_data(self, builds):
 
         for build in builds:
-            if "workflows" in build:
-                job_name = build["workflows"]["job_name"]
-                if not job_name.startswith("build-and-test"):
-                    continue
-            else:
-                continue
 
             failure_step = ""
             if self.filter == 'failed':
@@ -105,7 +99,6 @@ class AnalyzeBuilds(object):
                 "start_time": build_time_string, 
                 "status": build["status"], 
                 "build_time": build["build_time_millis"], 
-                "job_name":job_name, 
                 "failure_step": failure_step
             })        
 
