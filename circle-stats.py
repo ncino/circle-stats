@@ -48,6 +48,7 @@ class AnalyzeBuilds(object):
             if self.mode == "build_failures":
                 self.filter = "failed"
             elif self.mode == "test_failures":
+                self.filter = "failed"
                 self.allowed_test_statuses = ["failure"]
             else:
                 raise Exception(self.mode + " is not an understood argument")
